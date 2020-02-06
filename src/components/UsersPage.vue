@@ -4,26 +4,41 @@
       class="mx-auto mt-10 pa-4"
       max-width="600"
     >
-      <v-form class="mx-4">
+      <v-card-title>Create</v-card-title>
+      <v-card-subtitle>The form to create a user</v-card-subtitle>
+      <v-form>
         <v-row>
-          <v-col>
-            <v-card-title>Create</v-card-title>
-            <v-card-subtitle>The form to create a user</v-card-subtitle>
-          </v-col>
-          <v-col>
+          <v-col class="mx-4">
             <v-text-field
               placeholder="Name"
               prepend-icon="mdi-account-circle"
               v-model="name"
+              required
             ></v-text-field>
-            <v-text-field
-              placeholder="Phone number"
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col class="mx-4">
+            <vue-phone-number-input
+              placeholder="Phone"
               prepend-icon="mdi-phone"
               v-model="phone"
-            ></v-text-field>
-            <div class="d-flex justify-end">
-              <v-btn small color="primary" v-on:click="createUser(name, phone)">create</v-btn>
-            </div>
+              clearable
+              :error="phoneError"
+              :valid="phoneValid"
+              fetch-country
+              v-on:update="update($event)"
+            ></vue-phone-number-input>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col class="d-flex justify-end mx-4">
+            <v-btn
+              small
+              color="primary"
+              :disabled="!phoneValid"
+              v-on:click="createUser({ name, phone }) && clearForm()"
+            >create</v-btn>
           </v-col>
         </v-row>
       </v-form>
@@ -62,36 +77,44 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { User } from '@/store';
+import { createNamespacedHelpers } from 'vuex';
+import { UserState } from '@/interfaces/users';
+
+const { mapState, mapActions } = createNamespacedHelpers('users');
 
 export default Vue.extend({
   name: 'UsersPage',
 
   computed: {
-    users(): User[] {
-      return this.$store.state.users;
-    },
+    ...mapState({ users: state => (state as UserState).list }),
+  },
+
+  async created() {
+    this.subscribe();
+    this.loadUsers();
   },
 
   methods: {
-    createUser() {
-      this.$store.commit('addUser', {
-        name: this.$data.name,
-        phone: this.$data.phone,
-        id: String(Math.floor(Math.random() * 10000000)),
-      });
+    ...mapActions(['loadUsers', 'deleteUser', 'createUser', 'subscribe']),
+
+    clearForm() {
       this.$data.name = '';
       this.$data.phone = '';
+      this.$data.phoneValid = false;
+      this.$data.phoneError = false;
     },
 
-    deleteUser(id: string) {
-      this.$store.commit('deleteUser', id);
+    update(event: { phoneNumber: string, isValid: boolean }) {
+      this.$data.phoneValid = event.isValid;
+      this.$data.phoneError = event.phoneNumber && !event.isValid;
     },
   },
 
   data: () => ({
     name: '',
     phone: '',
+    phoneValid: false,
+    phoneError: false,
   }),
 });
 </script>
