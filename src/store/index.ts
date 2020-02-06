@@ -4,7 +4,7 @@ import Vuex from 'vuex';
 Vue.use(Vuex);
 
 export interface User {
-  id?: string;
+  id: string;
   name: string;
   phone: string;
 }
@@ -15,7 +15,18 @@ export interface State {
 
 export default new Vuex.Store<State>({
   state: {
-    users: [],
+    users: [
+      {
+        id: '1',
+        name: 'test name',
+        phone: '',
+      },
+      {
+        id: '2',
+        name: 'test name',
+        phone: '',
+      },
+    ],
   },
   mutations: {
     addUser: (state, user: User) => {
